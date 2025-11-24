@@ -1,0 +1,34 @@
+# This file contains the versions of the libraries used in the project.
+
+[versions]
+# 基础库版本
+androidGradlePlugin = "8.2.0" # 这是我猜测的版本，如果不对，请保持你原来的版本
+kotlin = "1.9.0" # 这是我猜测的版本，如果不对，请保持你原来的版本
+coreKtx = "1.12.0"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+# 传统 View 系统所需库的版本
+appcompat = "1.6.1"
+material = "1.11.0"
+constraintlayout = "2.1.4"
+activity = "1.8.0"
+
+
+[libraries]
+# 基础库
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+# 传统 View 系统所需库
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+com-google-android-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+
+
+[plugins]
+# 插件定义
+android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
