@@ -25,6 +25,8 @@ class HomeActivity : AppCompatActivity() {
         pagerAdapter = ViewPagerAdapter(this)
         viewPager.adapter = pagerAdapter
 
+        viewPager.setPageTransformer(ZoomOutPageTransformer())
+
         // --- 联动逻辑开始 ---
 
         // 3. 设置 BottomNavigationView 的点击监听
