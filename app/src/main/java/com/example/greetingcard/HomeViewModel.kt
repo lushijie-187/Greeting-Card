@@ -9,57 +9,74 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class HomeUiState(
+    val items: List<ListItem> = emptyList(),
+    val isRefreshing: Boolean = false, // 专用于下拉刷新
+    val isLoadingMore: Boolean = false, // 专用于加载更多
+)
+
 class HomeViewModel : ViewModel() {
 
-    // 私有的、可变的 StateFlow，仅在 ViewModel 内部使用
-    private val _posts = MutableStateFlow<List<Post>>(emptyList())
-    // 对外暴露的、不可变的 StateFlow，供 UI 订阅
-    val posts: StateFlow<List<Post>> = _posts.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val repository = PostRepository
 
     init {
         // ViewModel 创建时，如果列表为空，则加载初始数据
-        if (_posts.value.isEmpty()) {
+        if (_uiState.value.items.isEmpty()) {
             loadInitialPosts()
         }
     }
 
     fun loadInitialPosts() {
-        // 防止重复加载
-        if (_isLoading.value) return
-
-        // 使用 viewModelScope 启动一个协程，它与 ViewModel 的生命周期绑定
+        // 防止在已有操作时重复触发
+        if (_uiState.value.isRefreshing || _uiState.value.isLoadingMore) return
         viewModelScope.launch {
-            _isLoading.value = true
+            // 更新状态，表明“下拉刷新”开始了
+            _uiState.update { it.copy(isRefreshing = true) }
             val newPosts = repository.getPosts(page = 1, count = 12)
-            _posts.value = newPosts // 直接替换为新数据
-            _isLoading.value = false
+            // 更新状态，设置新列表并结束“下拉刷新”
+            _uiState.update {
+                it.copy(
+                    items = newPosts.map { post -> ListItem.PostItem(post) },
+                    isRefreshing = false
+                )
+            }
         }
     }
 
     fun loadMorePosts() {
-        if (_isLoading.value) return
-
+        // 防止在已有操作时重复触发
+        if (_uiState.value.isRefreshing || _uiState.value.isLoadingMore) return
         viewModelScope.launch {
-            _isLoading.value = true
-            val morePosts = repository.getPosts(page = 2, count = 6) // page 暂时写死
-            // 在现有列表基础上追加新数据
-            _posts.value = _posts.value + morePosts
-            _isLoading.value = false
+            // 更新状态，表明“加载更多”开始了
+            _uiState.update { currentState ->
+                currentState.copy(
+                    items = currentState.items + ListItem.LoadingItem,
+                    isLoadingMore = true
+                )
+            }
+            val morePosts = repository.getPosts(page = 2, count = 6)
+            // 更新状态，追加列表并结束“加载更多”
+            _uiState.update { currentState ->
+                currentState.copy(
+                    // 先移除末尾的加载项，再追加新的帖子项
+                    items = currentState.items.dropLast(1) + morePosts.map { post -> ListItem.PostItem(post) },
+                    isLoadingMore = false
+                )
+            }
         }
     }
 
     fun deletePost(postToDelete: Post) {
         viewModelScope.launch {
-            // 立即在 UI 上反映删除
-            _posts.update { currentList ->
-                currentList.filterNot { it === postToDelete }
+            _uiState.update { currentState ->
+                currentState.copy(
+                    items = currentState.items.filterNot {
+                        it is ListItem.PostItem && it.post === postToDelete
+                    }
+                )
             }
-            // 然后在后台调用仓库执行实际的删除操作
             repository.deletePost(postToDelete)
         }
     }

@@ -2,6 +2,7 @@
 package com.example.greetingcard
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,22 +24,16 @@ class HomeFragment : Fragment() {
     private val viewModel: HomeViewModel by viewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        // 加载 Fragment 自己的布局
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
-    /**
-     * 这个回调在 onCreateView() 之后、视图完全创建好时被调用。
-     * 是进行视图初始化（findViewById、设置监听器等）的最佳位置。
-     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupViews(view)
         setupListeners()
-        observeViewModel() // 新增：开始观察 ViewModel
+        observeViewModel()
     }
 
     private fun setupViews(view: View) {
@@ -76,23 +71,23 @@ class HomeFragment : Fragment() {
             }
         })
     }
+
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            // repeatOnLifecycle 会在 Fragment 进入 STARTED 状态时执行块内的代码，
-            // 并在 STOPPED 时挂起，这是订阅 UI 更新的安全方式。
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // 启动一个新的协程来订阅帖子列表
-                launch {
-                    viewModel.posts.collect { posts ->
-                        // 当 posts StateFlow 有新值时，这里会执行
-                        adapter.submitList(posts)
-                    }
-                }
-                // 启动另一个协程来订阅加载状态
-                launch {
-                    viewModel.isLoading.collect { isLoading ->
-                        // 当 isLoading StateFlow 有新值时，这里会执行
-                        swipeRefreshLayout.isRefreshing = isLoading
+                viewModel.uiState.collect { uiState ->
+                    // 1. 更新列表数据
+                    adapter.submitList(uiState.items)
+                    // 2. 更新下拉刷新指示器
+                    swipeRefreshLayout.isRefreshing = uiState.isRefreshing
+                    // 3. 更新“加载更多”的 UI
+                    // 你可以在 RecyclerView 底部添加一个 ProgressBar
+                    // 并根据 uiState.isLoadingMore 来控制其显示和隐藏
+                    // 这里我们暂时只打印日志来确认状态
+                    if (uiState.isLoadingMore) {
+                        Log.d("HomeFragment", "正在加载更多...")
+                    } else {
+                        Log.d("HomeFragment", "加载更多完成。")
                     }
                 }
             }

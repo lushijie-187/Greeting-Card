@@ -11,17 +11,22 @@ object PostGenerator {
         }
         return postList
     }
+
     private fun generateRandomPost(): Post {
         val randomImage = imagePool.random()
         val randomAvatar = avatarPool.random()
+        val titleId = Random.nextInt(1000, 9999)
+        val userId = Random.nextInt(100, 999)
         return Post(
             imageResId = randomImage,
-            title = "随机帖子 #${Random.nextInt(1000, 9999)}", // 标题为随机数
+            title = "随机帖子 #${titleId}",
             userAvatarResId = randomAvatar,
-            userName = "随机用户 #${Random.nextInt(100, 999)}",
-            likeCount = Random.nextInt(0, 2000)
+            userName = "随机用户 #${userId}",
+            likeCount = Random.nextInt(0, 2000),
+            id = userId * 10000 + titleId
         )
     }
+
     private val imagePool = listOf(
         android.R.drawable.ic_menu_camera,
         android.R.drawable.ic_menu_gallery,

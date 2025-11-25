@@ -1,4 +1,5 @@
 package com.example.greetingcard
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,13 +8,15 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import kotlin.toString
 
-// 1. Adapter 继承自 ListAdapter，而不是 RecyclerView.Adapter
+private const val ITEM_VIEW_TYPE_POST = 0
+private const val ITEM_VIEW_TYPE_LOADING = 1
+
 class PostAdapter(
-    // 3. 添加一个长按事件的回调函数作为构造参数
     private val onPostLongClicked: (Post) -> Unit
-) : ListAdapter<Post, PostAdapter.PostViewHolder>(PostDiffCallback()) {
+) : ListAdapter<ListItem, RecyclerView.ViewHolder>(ListItemDiffCallback()) {
 
     // 1. ViewHolder: 缓存一个卡片布局中所有的子视图
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -38,33 +41,58 @@ class PostAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.list_item_post, parent, false)
-        return PostViewHolder(view)
+    inner class LoadingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        // 这个 ViewHolder 不需要 bind 方法，因为它只是一个静态的 ProgressBar
     }
 
-    override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
-        val post = getItem(position) // 使用 ListAdapter 提供的 getItem() 方法获取数据
-        holder.bind(post)
+    override fun getItemViewType(position: Int): Int {
+        return when (getItem(position)) {
+            is ListItem.PostItem -> ITEM_VIEW_TYPE_POST
+            is ListItem.LoadingItem -> ITEM_VIEW_TYPE_LOADING
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
+        return when (viewType) {
+            ITEM_VIEW_TYPE_POST -> {
+                val view = inflater.inflate(R.layout.list_item_post, parent, false)
+                PostViewHolder(view)
+            }
+
+            ITEM_VIEW_TYPE_LOADING -> {
+                val view = inflater.inflate(R.layout.list_item_loading, parent, false)
+                // 让加载项占据整个宽度
+                val layoutParams = view.layoutParams
+                if (layoutParams is StaggeredGridLayoutManager.LayoutParams) {
+                    layoutParams.isFullSpan = true
+                }
+                LoadingViewHolder(view)
+            }
+
+            else -> throw IllegalArgumentException("Invalid view type")
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is PostViewHolder -> {
+                val postItem = getItem(position) as ListItem.PostItem
+                holder.bind(postItem.post)
+            }
+
+            is LoadingViewHolder -> {
+            }
+        }
     }
 }
 
-private class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
-    /**
-     * 判断两个对象是否是同一个 item。
-     * 通常比较它们的唯一 ID。由于我们的 Post 没有唯一 ID，这里暂时用对象引用本身来判断。
-     * 在真实项目中，应该比较 post.id。
-     */
-    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean {
-        return oldItem === newItem
+private class ListItemDiffCallback : DiffUtil.ItemCallback<ListItem>() {
+    override fun areItemsTheSame(oldItem: ListItem, newItem: ListItem): Boolean {
+        return oldItem.id == newItem.id
     }
-    /**
-     * 判断两个 item 的内容是否相同。
-     * 只有在 areItemsTheSame() 返回 true 时，此方法才会被调用。
-     * data class 的 equals() 方法会比较所有属性，非常适合用在这里。
-     */
-    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean {
+
+    override fun areContentsTheSame(oldItem: ListItem, newItem: ListItem): Boolean {
         return oldItem == newItem
     }
 }
