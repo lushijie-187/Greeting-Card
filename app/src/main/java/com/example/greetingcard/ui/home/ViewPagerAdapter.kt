@@ -1,9 +1,10 @@
-// file: com/example/greetingcard/ViewPagerAdapter.kt
-package com.example.greetingcard
+package com.example.greetingcard.ui.home
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.example.greetingcard.ui.profile.ProfileFragment
+import com.example.greetingcard.ui.settings.SettingsFragment
 
 /**
  * 这个 Adapter 负责为 ViewPager2 提供 Fragment 页面。

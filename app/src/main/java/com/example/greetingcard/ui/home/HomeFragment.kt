@@ -1,8 +1,6 @@
-// file: com/example/greetingcard/HomeFragment.kt
-package com.example.greetingcard
+package com.example.greetingcard.ui.home
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +12,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.greetingcard.ui.widget.GridSpacingItemDecoration
+import com.example.greetingcard.R
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -40,7 +40,7 @@ class HomeFragment : Fragment() {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
         recyclerView = view.findViewById(R.id.post_recycler_view)
         // 1. 初始化新的 Adapter，并传入长按删除的逻辑
-        adapter = PostAdapter { postToDelete -> viewModel.deletePost(postToDelete) }
+        adapter = PostAdapter(viewModel)
         layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
@@ -80,15 +80,6 @@ class HomeFragment : Fragment() {
                     adapter.submitList(uiState.items)
                     // 2. 更新下拉刷新指示器
                     swipeRefreshLayout.isRefreshing = uiState.isRefreshing
-                    // 3. 更新“加载更多”的 UI
-                    // 你可以在 RecyclerView 底部添加一个 ProgressBar
-                    // 并根据 uiState.isLoadingMore 来控制其显示和隐藏
-                    // 这里我们暂时只打印日志来确认状态
-                    if (uiState.isLoadingMore) {
-                        Log.d("HomeFragment", "正在加载更多...")
-                    } else {
-                        Log.d("HomeFragment", "加载更多完成。")
-                    }
                 }
             }
         }

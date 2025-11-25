@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#F5F5F5"
-    tools:context=".SettingsFragment"> <!-- 假设未来的Fragment类名 -->
+    tools:context=".ui.settings.SettingsFragment"> <!-- 假设未来的Fragment类名 -->
 
     <!-- 设置项分组1: 通用设置 -->
     <TextView

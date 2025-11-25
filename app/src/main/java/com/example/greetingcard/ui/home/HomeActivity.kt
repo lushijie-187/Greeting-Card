@@ -1,10 +1,13 @@
-// file: com/example/greetingcard/HomeActivity.kt (修改后)
-package com.example.greetingcard
+package com.example.greetingcard.ui.home
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
+import com.example.greetingcard.util.LoginManager
+import com.example.greetingcard.R
+import com.example.greetingcard.ui.widget.ZoomOutPageTransformer
+import com.example.greetingcard.ui.auth.MainActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HomeActivity : AppCompatActivity() {

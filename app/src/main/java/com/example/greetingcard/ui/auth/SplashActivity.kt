@@ -1,8 +1,11 @@
-package com.example.greetingcard
+package com.example.greetingcard.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.greetingcard.ui.home.HomeActivity
+import com.example.greetingcard.util.LoginManager
+import com.example.greetingcard.ui.auth.MainActivity
 
 class SplashActivity : AppCompatActivity() {
 

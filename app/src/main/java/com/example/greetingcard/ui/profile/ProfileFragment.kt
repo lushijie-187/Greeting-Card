@@ -1,11 +1,11 @@
-// file: com/example/greetingcard/ProfileFragment.kt
-package com.example.greetingcard
+package com.example.greetingcard.ui.profile
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.greetingcard.R
 
 class ProfileFragment : Fragment() {
 

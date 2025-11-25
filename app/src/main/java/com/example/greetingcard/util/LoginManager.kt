@@ -1,4 +1,4 @@
-package com.example.greetingcard
+package com.example.greetingcard.util
 
 import android.content.Context
 import android.content.SharedPreferences

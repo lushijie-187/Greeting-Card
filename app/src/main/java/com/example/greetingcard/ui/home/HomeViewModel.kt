@@ -1,18 +1,24 @@
 // file: HomeViewModel.kt
-package com.example.greetingcard
+package com.example.greetingcard.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.greetingcard.data.model.ListItem
+import com.example.greetingcard.data.model.Post
+import com.example.greetingcard.data.repository.PostRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 data class HomeUiState(
     val items: List<ListItem> = emptyList(),
     val isRefreshing: Boolean = false, // 专用于下拉刷新
     val isLoadingMore: Boolean = false, // 专用于加载更多
+    val currentPage: Int = 1, // 新增：当前页码
+    val canLoadMore: Boolean = true // 新增：是否还能加载更多
 )
 
 class HomeViewModel : ViewModel() {
@@ -20,6 +26,7 @@ class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val repository = PostRepository
+    private val postsPerPage = 12 // 定义每页加载的数量
 
     init {
         // ViewModel 创建时，如果列表为空，则加载初始数据
@@ -33,8 +40,9 @@ class HomeViewModel : ViewModel() {
         if (_uiState.value.isRefreshing || _uiState.value.isLoadingMore) return
         viewModelScope.launch {
             // 更新状态，表明“下拉刷新”开始了
-            _uiState.update { it.copy(isRefreshing = true) }
-            val newPosts = repository.getPosts(page = 1, count = 12)
+            val randomInitialPage = Random.nextInt(1, 51)
+            _uiState.update { it.copy(isRefreshing = true, currentPage = randomInitialPage, canLoadMore = true) }
+            val newPosts = repository.getPosts(page = randomInitialPage, count = postsPerPage)
             // 更新状态，设置新列表并结束“下拉刷新”
             _uiState.update {
                 it.copy(
@@ -47,22 +55,22 @@ class HomeViewModel : ViewModel() {
 
     fun loadMorePosts() {
         // 防止在已有操作时重复触发
-        if (_uiState.value.isRefreshing || _uiState.value.isLoadingMore) return
+        if (!_uiState.value.canLoadMore || _uiState.value.isRefreshing || _uiState.value.isLoadingMore) return
         viewModelScope.launch {
-            // 更新状态，表明“加载更多”开始了
+            val nextPage = _uiState.value.currentPage + 1
             _uiState.update { currentState ->
                 currentState.copy(
                     items = currentState.items + ListItem.LoadingItem,
                     isLoadingMore = true
                 )
             }
-            val morePosts = repository.getPosts(page = 2, count = 6)
-            // 更新状态，追加列表并结束“加载更多”
+            val morePosts = repository.getPosts(page = nextPage, count = postsPerPage)
             _uiState.update { currentState ->
                 currentState.copy(
-                    // 先移除末尾的加载项，再追加新的帖子项
                     items = currentState.items.dropLast(1) + morePosts.map { post -> ListItem.PostItem(post) },
-                    isLoadingMore = false
+                    isLoadingMore = false,
+                    currentPage = nextPage,
+                    canLoadMore = morePosts.isNotEmpty()
                 )
             }
         }

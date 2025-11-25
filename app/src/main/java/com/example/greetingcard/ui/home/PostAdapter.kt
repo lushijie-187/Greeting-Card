@@ -1,4 +1,4 @@
-package com.example.greetingcard
+package com.example.greetingcard.ui.home
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,13 +9,17 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import kotlin.toString
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.example.greetingcard.R
+import com.example.greetingcard.data.model.ListItem
+import com.example.greetingcard.data.model.Post
 
 private const val ITEM_VIEW_TYPE_POST = 0
 private const val ITEM_VIEW_TYPE_LOADING = 1
 
 class PostAdapter(
-    private val onPostLongClicked: (Post) -> Unit
+    private val viewModel: HomeViewModel
 ) : ListAdapter<ListItem, RecyclerView.ViewHolder>(ListItemDiffCallback()) {
 
     // 1. ViewHolder: 缓存一个卡片布局中所有的子视图
@@ -28,14 +32,19 @@ class PostAdapter(
 
         fun bind(post: Post) {
             // 将 post 数据绑定到 holder 的视图上
-            postImage.setImageResource(post.imageResId)
+            Glide.with(itemView.context).load(post.imageUrl) // 从 URL 加载
+                .placeholder(R.drawable.placeholder_image) // (可选) 添加占位图
+                .error(R.drawable.error_image) // (可选) 添加加载失败图
+                .transition(DrawableTransitionOptions.withCrossFade()) // (可选) 淡入动画
+                .into(postImage)
             postTitle.text = post.title
-            userAvatar.setImageResource(post.userAvatarResId)
+            Glide.with(itemView.context).load(post.userAvatarUrl).circleCrop() // (可选) 将图片裁剪为圆形
+                .into(userAvatar)
             userName.text = post.userName
             likeCount.text = post.likeCount.toString()
             // 4. 设置长按监听器
             itemView.setOnLongClickListener {
-                onPostLongClicked(post) // 调用传入的回调函数
+                viewModel.deletePost(post)
                 true // 返回 true 表示消费了此事件
             }
         }

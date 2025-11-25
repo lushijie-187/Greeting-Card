@@ -1,5 +1,5 @@
 // file: com/example/greetingcard/ZoomOutPageTransformer.kt
-package com.example.greetingcard
+package com.example.greetingcard.ui.widget
 
 import android.view.View
 import androidx.viewpager2.widget.ViewPager2

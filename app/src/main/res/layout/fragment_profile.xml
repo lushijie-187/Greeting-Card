@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#F5F5F5"
-    tools:context=".ProfileFragment"> <!-- 假设未来的Fragment类名 -->
+    tools:context=".ui.profile.ProfileFragment"> <!-- 假设未来的Fragment类名 -->
 
     <!-- 顶部个人信息区域 -->
     <!-- 使用 RelativeLayout 来实现复杂的相对定位 -->

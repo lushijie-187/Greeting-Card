@@ -1,5 +1,4 @@
-// file: com/example/greetingcard/GridSpacingItemDecoration.kt
-package com.example.greetingcard
+package com.example.greetingcard.ui.widget
 
 import android.graphics.Rect
 import android.view.View
