@@ -2,23 +2,25 @@
 package com.example.greetingcard
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PostAdapter
     private lateinit var layoutManager: StaggeredGridLayoutManager
-    private var isLoading = false
+    private val viewModel: HomeViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,21 +38,14 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupViews(view)
         setupListeners()
-        // 首次加载数据
-        // 使用 adapter.currentList 检查列表是否为空
-        if (adapter.currentList.isEmpty()) {
-            loadInitialData()
-        }
+        observeViewModel() // 新增：开始观察 ViewModel
     }
 
     private fun setupViews(view: View) {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
         recyclerView = view.findViewById(R.id.post_recycler_view)
         // 1. 初始化新的 Adapter，并传入长按删除的逻辑
-        adapter = PostAdapter { postToDelete ->
-            // 这里是长按事件触发后的逻辑
-            handlePostDeletion(postToDelete)
-        }
+        adapter = PostAdapter { postToDelete -> viewModel.deletePost(postToDelete) }
         layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
@@ -62,54 +57,46 @@ class HomeFragment : Fragment() {
 
     private fun setupListeners() {
         // 下拉刷新监听
-        swipeRefreshLayout.setOnRefreshListener {
-            loadInitialData()
-        }
+        swipeRefreshLayout.setOnRefreshListener { viewModel.loadInitialPosts() }
         // 上滑加载更多监听
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                val lastVisibleItemPositions = layoutManager.findLastVisibleItemPositions(null)
-                val lastVisibleItemPosition = lastVisibleItemPositions.maxOrNull() ?: 0
-                val itemCount = adapter.itemCount // 从 adapter 获取
-                if (!isLoading && itemCount > 0 &&
-                    (lastVisibleItemPosition + layoutManager.spanCount) >= itemCount
-                ) {
-                    loadMoreData()
+                super.onScrolled(recyclerView, dx, dy)
+                if (dy > 0) { // 仅在向下滑动时检查
+                    val visibleItemCount = layoutManager.childCount
+                    val totalItemCount = layoutManager.itemCount
+                    val firstVisibleItems = IntArray(layoutManager.spanCount)
+                    layoutManager.findLastVisibleItemPositions(firstVisibleItems)
+
+                    val lastVisibleItem = firstVisibleItems.maxOrNull() ?: 0
+                    if (visibleItemCount + lastVisibleItem >= totalItemCount - 3) { // 预加载
+                        viewModel.loadMorePosts()
+                    }
                 }
             }
         })
     }
-
-    private fun handlePostDeletion(postToDelete: Post) {
-        // 从当前列表中创建一个新的可变列表
-        val currentList = adapter.currentList.toMutableList()
-        // 从新列表中移除要删除的项
-        currentList.remove(postToDelete)
-        // 将新列表提交给 adapter。DiffUtil 会自动计算差异并执行删除动画！
-        adapter.submitList(currentList)
-        Toast.makeText(requireContext(), "已删除: ${postToDelete.title}", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun loadInitialData() {
-        swipeRefreshLayout.isRefreshing = true
-        Handler(Looper.getMainLooper()).postDelayed({
-            // 4. 使用 submitList 更新数据
-            val newPosts = PostGenerator.generateRandomPosts(12)
-            adapter.submitList(newPosts)
-            swipeRefreshLayout.isRefreshing = false
-        }, 1000)
-    }
-
-    private fun loadMoreData() {
-        isLoading = true
-        Handler(Looper.getMainLooper()).postDelayed({
-            // 4. 使用 submitList 更新数据
-            val currentList = adapter.currentList.toMutableList()
-            val morePosts = PostGenerator.generateRandomPosts(6)
-            currentList.addAll(morePosts)
-            adapter.submitList(currentList)
-            isLoading = false
-        }, 1000)
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            // repeatOnLifecycle 会在 Fragment 进入 STARTED 状态时执行块内的代码，
+            // 并在 STOPPED 时挂起，这是订阅 UI 更新的安全方式。
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // 启动一个新的协程来订阅帖子列表
+                launch {
+                    viewModel.posts.collect { posts ->
+                        // 当 posts StateFlow 有新值时，这里会执行
+                        adapter.submitList(posts)
+                    }
+                }
+                // 启动另一个协程来订阅加载状态
+                launch {
+                    viewModel.isLoading.collect { isLoading ->
+                        // 当 isLoading StateFlow 有新值时，这里会执行
+                        swipeRefreshLayout.isRefreshing = isLoading
+                    }
+                }
+            }
+        }
     }
 
 }
