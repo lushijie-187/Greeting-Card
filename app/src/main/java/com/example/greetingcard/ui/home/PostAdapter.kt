@@ -14,6 +14,8 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.greetingcard.R
 import com.example.greetingcard.data.model.ListItem
 import com.example.greetingcard.data.model.Post
+import android.net.Uri // 导入 Uri
+import com.facebook.drawee.view.SimpleDraweeView
 
 private const val ITEM_VIEW_TYPE_POST = 0
 private const val ITEM_VIEW_TYPE_LOADING = 1
@@ -24,22 +26,17 @@ class PostAdapter(
 
     // 1. ViewHolder: 缓存一个卡片布局中所有的子视图
     inner class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val postImage: ImageView = itemView.findViewById(R.id.post_image)
+        val postImageView: SimpleDraweeView = itemView.findViewById(R.id.post_image)
         val postTitle: TextView = itemView.findViewById(R.id.post_title)
-        val userAvatar: ImageView = itemView.findViewById(R.id.user_avatar)
+        val userAvatarImageView: SimpleDraweeView = itemView.findViewById(R.id.user_avatar)
         val userName: TextView = itemView.findViewById(R.id.user_name)
         val likeCount: TextView = itemView.findViewById(R.id.like_count)
 
         fun bind(post: Post) {
             // 将 post 数据绑定到 holder 的视图上
-            Glide.with(itemView.context).load(post.imageUrl) // 从 URL 加载
-                .placeholder(R.drawable.placeholder_image) // (可选) 添加占位图
-                .error(R.drawable.error_image) // (可选) 添加加载失败图
-                .transition(DrawableTransitionOptions.withCrossFade()) // (可选) 淡入动画
-                .into(postImage)
+            postImageView.setImageURI(Uri.parse(post.imageUrl))
+            userAvatarImageView.setImageURI(Uri.parse(post.userAvatarUrl))
             postTitle.text = post.title
-            Glide.with(itemView.context).load(post.userAvatarUrl).circleCrop() // (可选) 将图片裁剪为圆形
-                .into(userAvatar)
             userName.text = post.userName
             likeCount.text = post.likeCount.toString()
             // 4. 设置长按监听器

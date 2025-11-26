@@ -73,6 +73,13 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     // Glide (用于从 URL 加载网络图片)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    // 添加 Fresco 的依赖
+    implementation("com.facebook.fresco:fresco:3.1.3")
+    // 如果你需要支持 GIF 动画，添加这个
+    implementation("com.facebook.fresco:animated-gif:3.1.3")
+    // 如果你需要支持 WebP 动画，添加这个
+    implementation("com.facebook.fresco:animated-webp:3.1.3")
+    implementation("com.facebook.fresco:webpsupport:3.1.3")
 
     // 测试库
     testImplementation(libs.junit)
