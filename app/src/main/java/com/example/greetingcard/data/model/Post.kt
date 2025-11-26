@@ -21,7 +21,8 @@ data class Post(
     val imageUrl: String,
     val userName: String,
     val userAvatarUrl: String,
-    val likeCount: Int
+    var likeCount: Int,
+    var isLiked: Boolean = false
 )
 
 sealed class ListItem {

@@ -88,4 +88,24 @@ class HomeViewModel : ViewModel() {
             repository.deletePost(postToDelete)
         }
     }
+
+    fun onLikeClicked(post: Post) {
+        // 更新 post 对象的点赞状态
+        post.isLiked = !post.isLiked
+        post.likeCount++
+        // 为了让 StateFlow 能够检测到变化，我们需要创建一个新的列表
+        // 因为仅仅修改列表内对象的属性，StateFlow 是无法感知的
+        _uiState.update { currentState ->
+            currentState.copy(
+                items = currentState.items.map { listItem ->
+                    if (listItem is ListItem.PostItem && listItem.post.id == post.id) {
+                        // 创建一个新的 PostItem，包含更新后的 post 对象
+                        ListItem.PostItem(post.copy())
+                    } else {
+                        listItem
+                    }
+                }
+            )
+        }
+    }
 }

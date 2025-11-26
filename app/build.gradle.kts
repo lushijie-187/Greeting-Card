@@ -80,6 +80,7 @@ dependencies {
     // 如果你需要支持 WebP 动画，添加这个
     implementation("com.facebook.fresco:animated-webp:3.1.3")
     implementation("com.facebook.fresco:webpsupport:3.1.3")
+    implementation("com.airbnb.android:lottie:6.3.0")
 
     // 测试库
     testImplementation(libs.junit)
