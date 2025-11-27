@@ -81,6 +81,7 @@ dependencies {
     implementation("com.facebook.fresco:animated-webp:3.1.3")
     implementation("com.facebook.fresco:webpsupport:3.1.3")
     implementation("com.airbnb.android:lottie:6.3.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     // 测试库
     testImplementation(libs.junit)

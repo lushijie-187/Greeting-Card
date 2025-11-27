@@ -39,14 +39,11 @@ class HomeFragment : Fragment() {
     private fun setupViews(view: View) {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout)
         recyclerView = view.findViewById(R.id.post_recycler_view)
-        // 1. 初始化新的 Adapter，并传入长按删除的逻辑
         adapter = PostAdapter(viewModel)
         layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
-        // 2. 添加我们创建的 ItemDecoration
-        val spacingInPixels =
-            resources.getDimensionPixelSize(R.dimen.grid_spacing) // 假设你在 dimens.xml 定义了间距
+        val spacingInPixels = resources.getDimensionPixelSize(R.dimen.grid_spacing)
         recyclerView.addItemDecoration(GridSpacingItemDecoration(2, spacingInPixels, true))
     }
 
@@ -57,16 +54,16 @@ class HomeFragment : Fragment() {
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (dy > 0) { // 仅在向下滑动时检查
-                    val visibleItemCount = layoutManager.childCount
-                    val totalItemCount = layoutManager.itemCount
-                    val firstVisibleItems = IntArray(layoutManager.spanCount)
-                    layoutManager.findLastVisibleItemPositions(firstVisibleItems)
-
-                    val lastVisibleItem = firstVisibleItems.maxOrNull() ?: 0
-                    if (visibleItemCount + lastVisibleItem >= totalItemCount - 3) { // 预加载
-                        viewModel.loadMorePosts()
-                    }
+                if (dy <= 0) {
+                    return
+                }
+                val visibleItemCount = layoutManager.childCount
+                val totalItemCount = layoutManager.itemCount
+                val firstVisibleItems = IntArray(layoutManager.spanCount)
+                layoutManager.findLastVisibleItemPositions(firstVisibleItems)
+                val lastVisibleItem = firstVisibleItems.maxOrNull() ?: 0
+                if (visibleItemCount + lastVisibleItem >= totalItemCount - 3) {
+                    viewModel.loadMorePosts()
                 }
             }
         })
@@ -76,9 +73,7 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { uiState ->
-                    // 1. 更新列表数据
                     adapter.submitList(uiState.items)
-                    // 2. 更新下拉刷新指示器
                     swipeRefreshLayout.isRefreshing = uiState.isRefreshing
                 }
             }
