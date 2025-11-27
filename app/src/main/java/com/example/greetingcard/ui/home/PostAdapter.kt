@@ -133,11 +133,8 @@ class PostAdapter(
         animatorSet.start()
     }
 
-    override fun submitList(list: List<ListItem>?) {
-        if (list != null && currentList.isNotEmpty() && list[0].id != currentList[0].id) {
-            lastEnterAnimatedPosition = -1
-        }
-        super.submitList(list)
+    fun resetAnimationState() {
+        lastEnterAnimatedPosition = -1
     }
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {

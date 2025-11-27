@@ -47,6 +47,15 @@ class HomeFragment : Fragment() {
         recyclerView.addItemDecoration(GridSpacingItemDecoration(2, spacingInPixels, true))
     }
 
+    private fun needLoadMore(): Boolean{
+        val visibleItemCount = layoutManager.childCount
+        val totalItemCount = layoutManager.itemCount
+        val firstVisibleItems = IntArray(layoutManager.spanCount)
+        layoutManager.findLastVisibleItemPositions(firstVisibleItems)
+        val lastVisibleItem = firstVisibleItems.maxOrNull() ?: 0
+        return visibleItemCount + lastVisibleItem >= totalItemCount - 3
+    }
+
     private fun setupListeners() {
         // 下拉刷新监听
         swipeRefreshLayout.setOnRefreshListener { viewModel.loadInitialPosts() }
@@ -54,15 +63,8 @@ class HomeFragment : Fragment() {
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (dy <= 0) {
-                    return
-                }
-                val visibleItemCount = layoutManager.childCount
-                val totalItemCount = layoutManager.itemCount
-                val firstVisibleItems = IntArray(layoutManager.spanCount)
-                layoutManager.findLastVisibleItemPositions(firstVisibleItems)
-                val lastVisibleItem = firstVisibleItems.maxOrNull() ?: 0
-                if (visibleItemCount + lastVisibleItem >= totalItemCount - 3) {
+                if (dy <= 0 && needLoadMore()) {
+                    adapter.resetAnimationState()
                     viewModel.loadMorePosts()
                 }
             }
